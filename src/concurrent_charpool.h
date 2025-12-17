@@ -80,10 +80,6 @@ typedef struct concurrent_charpool {
     size_t block_size;
     concurrent_small_string_stack_node_memory_pool *small_string_free_list_node_pool;
     concurrent_small_string_stack *small_string_free_lists;  
-    atomic_size_t num_blocks;
-    atomic_size_t num_large_blocks;
-    atomic_size_t total_used;
-    atomic_size_t total_size;
     _Atomic(concurrent_charpool_free_list_t) *free_lists;
     spinlock_t block_change_lock;
     _Atomic(concurrent_charpool_block_t *) block;
@@ -176,10 +172,6 @@ bool concurrent_charpool_init_options(concurrent_charpool_t *pool, const charpoo
         return false;
     }
     atomic_store(&pool->block, block);
-    atomic_init(&pool->num_blocks, 1);
-    atomic_init(&pool->num_large_blocks, 0);
-    atomic_init(&pool->total_size, pool->block_size);
-    atomic_init(&pool->total_used, 0);
     return true;
 }
 
@@ -253,16 +245,12 @@ char *concurrent_charpool_alloc(concurrent_charpool_t *pool, size_t size) {
         do {
             block->next = atomic_load(&pool->large_blocks);
         } while (!atomic_compare_exchange_weak(&pool->large_blocks, &block->next, block));
-        atomic_fetch_add(&pool->num_large_blocks, 1);
-        atomic_fetch_add(&pool->total_size, size);
-        atomic_fetch_add(&pool->total_used, size);
         return block->data;
     }
 
     // Small string allocation (< small_string_max_size, typically the pointer size)
     for (size_t i = size - pool->small_string_min_size; i < pool->small_string_max_size - pool->small_string_min_size; i++) {
         if (concurrent_small_string_stack_pop(&pool->small_string_free_lists[i], &result)) {
-            atomic_fetch_add(&pool->total_used, size);
             return result;
         }
     }
@@ -304,7 +292,6 @@ char *concurrent_charpool_alloc(concurrent_charpool_t *pool, size_t size) {
 
         if (in_block) {
             result = block->data + index;
-            atomic_fetch_add(&pool->total_used, size);
         } else {
             /* If the counter has gone beyond the block size, we need a new block.
              * Try to hold the spinlock to make sure only one thread grows the pool at a time.
@@ -343,9 +330,6 @@ char *concurrent_charpool_alloc(concurrent_charpool_t *pool, size_t size) {
                 atomic_store(&pool->block, new_block);
                 result = new_block->data;
                 spinlock_unlock(&pool->block_change_lock);
-                atomic_fetch_add(&pool->num_blocks, 1);
-                atomic_fetch_add(&pool->total_size, pool->block_size);
-                atomic_fetch_add(&pool->total_used, size);
                 break;
             }
         }

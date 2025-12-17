@@ -50,10 +50,6 @@ int test_concurrent_charpool_thread(void *arg) {
 TEST test_concurrent_charpool(void) {
     concurrent_charpool_t *pool = concurrent_charpool_new();
     ASSERT(pool != NULL);
-    ASSERT_EQ(atomic_load(&pool->num_blocks), 1);
-    ASSERT_EQ(atomic_load(&pool->num_large_blocks), 0);
-    ASSERT_EQ(atomic_load(&pool->total_size), pool->block_size);
-    ASSERT_EQ(atomic_load(&pool->total_used), 0);
 
     thrd_t threads[NUM_THREADS];
     for (size_t i = 0; i < NUM_THREADS; i++) {
