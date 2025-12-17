@@ -12,8 +12,8 @@
       "goodcleanfun/aligned": "*",
       "goodcleanfun/bit_utils": "*",
       "goodcleanfun/charpool": "*",
-      "goodcleanfun/container_of": "*",
-      "goodcleanfun/stack": "*"
+      "goodcleanfun/stack": "*",
+      "goodcleanfun/threading": "*"
     },
     "src": [
       "src/concurrent_charpool.h"
