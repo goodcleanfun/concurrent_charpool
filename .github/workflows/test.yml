@@ -83,6 +83,8 @@ jobs:
           curl -L https://raw.githubusercontent.com/goodcleanfun/memory_pool/refs/heads/main/src/memory_pool.h -o deps\memory_pool\memory_pool.h
           mkdir -p deps\stack
           curl -L https://raw.githubusercontent.com/goodcleanfun/stack/refs/heads/main/src/stack.h -o deps\stack\stack.h
+          mkdir -p deps\charpool
+          curl -L https://raw.githubusercontent.com/goodcleanfun/charpool/refs/heads/main/src/charpool.h -o deps\charpool\charpool.h
       - name: Run test with MSVC
         run: make CC=cl CFLAGS="/std:c11 /volatile:iso /experimental:c11atomics" test
 
@@ -117,6 +119,8 @@ jobs:
           curl -L https://raw.githubusercontent.com/goodcleanfun/memory_pool/refs/heads/main/src/memory_pool.h -o deps/memory_pool/memory_pool.h
           mkdir -p deps/stack
           curl -L https://raw.githubusercontent.com/goodcleanfun/stack/refs/heads/main/src/stack.h -o deps/stack/stack.h
+          mkdir -p deps/charpool
+          curl -L https://raw.githubusercontent.com/goodcleanfun/charpool/refs/heads/main/src/charpool.h -o deps/charpool/charpool.h
       - name: Build and Test with MinGW
         run: |
           make CC=gcc CFLAGS="-std=c11" LDFLAGS="-latomic" test
