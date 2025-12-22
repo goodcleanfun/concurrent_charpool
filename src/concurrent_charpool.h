@@ -211,6 +211,12 @@ bool concurrent_charpool_release_size(concurrent_charpool_t *pool, char *str, si
             return false;
         }
     }
+
+    if (size >= pool->block_size) {
+        CHARPOOL_ALIGNED_FREE(str);
+        return true;
+    }
+
     /* Release to floor(log2(size)) free list, which guarantees that the free list at level i
      * contains all strings of size 2^i or larger
     */
@@ -237,15 +243,8 @@ char *concurrent_charpool_alloc(concurrent_charpool_t *pool, size_t size) {
     char *result = NULL;
 
     // Large string allocation (>= block size)
-    if (size > pool->block_size - 1) {
-        concurrent_charpool_block_t *block = concurrent_charpool_block_new(size);
-        if (block == NULL) {
-            return NULL;
-        }
-        do {
-            block->next = atomic_load(&pool->large_blocks);
-        } while (!atomic_compare_exchange_weak(&pool->large_blocks, &block->next, block));
-        return block->data;
+    if (size >= pool->block_size) {
+        return CHARPOOL_ALIGNED_MALLOC(size, CHARPOOL_ALIGNMENT);
     }
 
     // Small string allocation (< small_string_max_size, typically the pointer size)
