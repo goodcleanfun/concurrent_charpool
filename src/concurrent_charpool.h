@@ -87,7 +87,7 @@ typedef struct concurrent_charpool {
 } concurrent_charpool_t;
 
 
-concurrent_charpool_block_t *concurrent_charpool_block_new(size_t block_size) {
+static concurrent_charpool_block_t *concurrent_charpool_block_new(size_t block_size) {
     concurrent_charpool_block_t *block = CHARPOOL_MALLOC(sizeof(concurrent_charpool_block_t));
     if (block == NULL) return NULL;
 
@@ -102,7 +102,7 @@ concurrent_charpool_block_t *concurrent_charpool_block_new(size_t block_size) {
     return block;
 }
 
-void concurrent_charpool_block_destroy(concurrent_charpool_block_t *block) {
+staticvoid concurrent_charpool_block_destroy(concurrent_charpool_block_t *block) {
     if (block == NULL) return;
     if (block->data != NULL) {
         CHARPOOL_ALIGNED_FREE(block->data);
@@ -110,7 +110,7 @@ void concurrent_charpool_block_destroy(concurrent_charpool_block_t *block) {
     CHARPOOL_FREE(block);
 }
 
-bool concurrent_charpool_init_options(concurrent_charpool_t *pool, const charpool_options_t options) {
+static bool concurrent_charpool_init_options(concurrent_charpool_t *pool, const charpool_options_t options) {
     if (pool == NULL || options.small_string_min_size < 1 || options.small_string_min_size > options.small_string_max_size || !is_power_of_two(options.block_size) || !is_power_of_two(options.small_string_max_size)) {
         return false;
     }
@@ -175,11 +175,11 @@ bool concurrent_charpool_init_options(concurrent_charpool_t *pool, const charpoo
     return true;
 }
 
-bool concurrent_charpool_init(concurrent_charpool_t *pool) {
+static bool concurrent_charpool_init(concurrent_charpool_t *pool) {
     return concurrent_charpool_init_options(pool, charpool_default_options());
 }
 
-concurrent_charpool_t *concurrent_charpool_new(void) {
+static concurrent_charpool_t *concurrent_charpool_new(void) {
     concurrent_charpool_t *pool = CHARPOOL_MALLOC(sizeof(concurrent_charpool_t));
     if (pool == NULL) return NULL;
 
@@ -191,7 +191,7 @@ concurrent_charpool_t *concurrent_charpool_new(void) {
     return pool;
 }
 
-concurrent_charpool_t *concurrent_charpool_new_options(const charpool_options_t options) {
+staticconcurrent_charpool_t *concurrent_charpool_new_options(const charpool_options_t options) {
     concurrent_charpool_t *pool = CHARPOOL_MALLOC(sizeof(concurrent_charpool_t));
     if (pool == NULL) return NULL;
     if (!concurrent_charpool_init_options(pool, options)) {
@@ -202,7 +202,7 @@ concurrent_charpool_t *concurrent_charpool_new_options(const charpool_options_t 
 }
 
 
-bool concurrent_charpool_release_size(concurrent_charpool_t *pool, char *str, size_t size) {
+static bool concurrent_charpool_release_size(concurrent_charpool_t *pool, char *str, size_t size) {
     if (pool == NULL || str == NULL || size < pool->small_string_min_size) return false;
     if (size < pool->small_string_max_size) {
         if (concurrent_small_string_stack_push(&pool->small_string_free_lists[size - pool->small_string_min_size], str)) {
@@ -237,7 +237,7 @@ bool concurrent_charpool_release_size(concurrent_charpool_t *pool, char *str, si
     return true;
 }
 
-char *concurrent_charpool_alloc(concurrent_charpool_t *pool, size_t size) {
+static char *concurrent_charpool_alloc(concurrent_charpool_t *pool, size_t size) {
     if (pool == NULL || size < pool->small_string_min_size) return NULL;
 
     char *result = NULL;
@@ -336,7 +336,7 @@ char *concurrent_charpool_alloc(concurrent_charpool_t *pool, size_t size) {
     return result;
 }
 
-char *concurrent_charpool_copy_size(concurrent_charpool_t *pool, const char *str, size_t n) {
+static char *concurrent_charpool_copy_size(concurrent_charpool_t *pool, const char *str, size_t n) {
     if (pool == NULL || str == NULL || n == 0) return NULL;
 
     char *result = concurrent_charpool_alloc(pool, n + 1);
@@ -346,7 +346,7 @@ char *concurrent_charpool_copy_size(concurrent_charpool_t *pool, const char *str
     return result;
 }
 
-char *concurrent_charpool_copy(concurrent_charpool_t *pool, const char *str) {
+static char *concurrent_charpool_copy(concurrent_charpool_t *pool, const char *str) {
     if (pool == NULL || str == NULL) return NULL;
 
     return concurrent_charpool_copy_size(pool, str, strlen(str));
@@ -354,7 +354,7 @@ char *concurrent_charpool_copy(concurrent_charpool_t *pool, const char *str) {
 
 
 
-void concurrent_charpool_destroy(concurrent_charpool_t *pool) {
+static void concurrent_charpool_destroy(concurrent_charpool_t *pool) {
     if (pool == NULL) return;
 
     concurrent_charpool_block_t *block = atomic_load(&pool->block);
