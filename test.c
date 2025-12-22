@@ -8,8 +8,8 @@
 
 #include "concurrent_charpool.h"
 
-#define NUM_THREADS 1
-#define NUM_INSERTS 256
+#define NUM_THREADS 2
+#define NUM_INSERTS 10
 
 int test_concurrent_charpool_thread(void *arg) {
     concurrent_charpool_t *pool = (concurrent_charpool_t *)arg;
