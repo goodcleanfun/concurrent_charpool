@@ -159,7 +159,7 @@ static bool concurrent_charpool_init_options(concurrent_charpool_t *pool, const 
     
     concurrent_charpool_block_t *block = concurrent_charpool_block_new(pool->block_size);
     if (block == NULL) {
-        CHARPOOL_FREE(pool->free_lists);
+        CHARPOOL_FREE((void *)pool->free_lists);
         pool->free_lists = NULL;
         concurrent_small_string_stack_node_memory_pool_destroy(stack_node_pool);
         CHARPOOL_FREE(pool->small_string_free_lists);
@@ -370,7 +370,7 @@ static void concurrent_charpool_destroy(concurrent_charpool_t *pool) {
     }
 
     if (pool->free_lists != NULL) {
-        CHARPOOL_FREE(pool->free_lists);
+        CHARPOOL_FREE((void *)pool->free_lists);
         pool->free_lists = NULL;
     }
     CHARPOOL_FREE(pool);
