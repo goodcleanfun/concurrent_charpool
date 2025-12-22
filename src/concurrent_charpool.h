@@ -79,7 +79,6 @@ typedef struct concurrent_charpool {
     _Atomic(concurrent_charpool_free_list_t) *free_lists;
     spinlock_t block_change_lock;
     _Atomic(concurrent_charpool_block_t *) block;
-    _Atomic(concurrent_charpool_block_t *) large_blocks;
 } concurrent_charpool_t;
 
 
@@ -358,12 +357,6 @@ static void concurrent_charpool_destroy(concurrent_charpool_t *pool) {
         concurrent_charpool_block_t *next = block->next;
         concurrent_charpool_block_destroy(block);
         block = next;
-    }
-    concurrent_charpool_block_t *large_block = atomic_load(&pool->large_blocks);
-    while (large_block != NULL) {
-        concurrent_charpool_block_t *next = large_block->next;
-        concurrent_charpool_block_destroy(large_block);
-        large_block = next;
     }
 
     if (pool->small_string_free_lists != NULL) {
