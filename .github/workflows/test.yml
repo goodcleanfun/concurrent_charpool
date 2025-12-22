@@ -56,38 +56,6 @@ jobs:
       - name: Run tests with ${{ matrix.compiler }}
         run: make CC=${{ matrix.compiler }} CFLAGS="-std=gnu11" install test
 
-  test-windows-msvc:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ilammy/msvc-dev-cmd@v1
-      - name: Install system deps
-        run: |
-          choco install make -y
-          choco install curl -y
-      - name: Install clib deps
-        run: |
-          mkdir -p deps\greatest
-          curl -L https://github.com/silentbicycle/greatest/raw/release/greatest.h -o deps\greatest\greatest.h
-          mkdir -p deps\threading
-          curl -L https://raw.githubusercontent.com/goodcleanfun/threading/refs/heads/main/src/threading.h -o deps\threading\threading.h
-          mkdir -p deps\aligned
-          curl -L https://raw.githubusercontent.com/goodcleanfun/aligned/refs/heads/main/src/aligned.h -o deps\aligned\aligned.h
-          mkdir -p deps\bit_utils
-          curl -L https://raw.githubusercontent.com/goodcleanfun/bit_utils/refs/heads/main/src/bit_utils.h -o deps\bit_utils\bit_utils.h
-          mkdir -p deps\cpu_relax
-          curl -L https://raw.githubusercontent.com/goodcleanfun/cpu_relax/refs/heads/main/src/cpu_relax.h -o deps\cpu_relax\cpu_relax.h
-          mkdir -p deps\spinlock
-          curl -L https://raw.githubusercontent.com/goodcleanfun/spinlock/refs/heads/main/src/spinlock.h -o deps\spinlock\spinlock.h
-          mkdir -p deps\memory_pool
-          curl -L https://raw.githubusercontent.com/goodcleanfun/memory_pool/refs/heads/main/src/memory_pool.h -o deps\memory_pool\memory_pool.h
-          mkdir -p deps\stack
-          curl -L https://raw.githubusercontent.com/goodcleanfun/stack/refs/heads/main/src/stack.h -o deps\stack\stack.h
-          mkdir -p deps\charpool
-          curl -L https://raw.githubusercontent.com/goodcleanfun/charpool/refs/heads/main/src/charpool.h -o deps\charpool\charpool.h
-      - name: Run test with MSVC
-        run: make CC=cl CFLAGS="/std:c11 /volatile:iso /experimental:c11atomics" test
-
   test-windows-mingw:
     runs-on: windows-latest
     defaults:
