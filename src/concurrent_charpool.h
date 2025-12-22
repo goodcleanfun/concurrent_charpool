@@ -327,6 +327,11 @@ static char *concurrent_charpool_alloc(concurrent_charpool_t *pool, size_t size)
                 spinlock_unlock(&pool->block_change_lock);
                 break;
             }
+            if (spin_count < 40) {
+                spin_count++;
+            } else {
+                return NULL;
+            }
             last_block = block;
         }
     }
