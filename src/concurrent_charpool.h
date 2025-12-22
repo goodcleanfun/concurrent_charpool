@@ -144,7 +144,7 @@ static bool concurrent_charpool_init_options(concurrent_charpool_t *pool, const 
     }
 
     pool->free_lists = NULL;
-    pool->free_lists = CHARPOOL_MALLOC(sizeof(_Atomic(concurrent_charpool_free_list_t)) * num_free_lists);
+    pool->free_lists = (_Atomic(concurrent_charpool_free_list_t) *) CHARPOOL_MALLOC(sizeof(_Atomic(concurrent_charpool_free_list_t)) * num_free_lists);
 
     if (pool->free_lists == NULL) {
         concurrent_small_string_stack_node_memory_pool_destroy(stack_node_pool);
