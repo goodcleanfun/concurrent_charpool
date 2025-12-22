@@ -8,7 +8,7 @@
 
 #include "concurrent_charpool.h"
 
-#define NUM_THREADS 2
+#define NUM_THREADS 8
 #define NUM_INSERTS 10
 
 int test_concurrent_charpool_thread(void *arg) {
