@@ -52,10 +52,6 @@ typedef struct concurrent_charpool_block {
     char *data;
 } concurrent_charpool_block_t;
 
-typedef union concurrent_charpool_list_item {
-    union concurrent_charpool_list_item *next;
-    char *value;
-} concurrent_charpool_list_item_t;
 
 #define STACK_NAME concurrent_small_string_stack
 #define STACK_TYPE char *
@@ -67,10 +63,8 @@ typedef union concurrent_charpool_list_item {
 
 typedef struct concurrent_charpool_free_list {
     size_t version;  // Version counter to avoid the ABA problem
-    charpool_free_string_t item;
+    charpool_free_string_t *item;
 } concurrent_charpool_free_list_t;
-
-concurrent_charpool_free_list_t CONCURRENT_CHARPOOL_NULL_FREE_LIST = {0, NULL};
 
 typedef struct concurrent_charpool {
     uint8_t small_string_min_size;
@@ -102,7 +96,7 @@ static concurrent_charpool_block_t *concurrent_charpool_block_new(size_t block_s
     return block;
 }
 
-staticvoid concurrent_charpool_block_destroy(concurrent_charpool_block_t *block) {
+static void concurrent_charpool_block_destroy(concurrent_charpool_block_t *block) {
     if (block == NULL) return;
     if (block->data != NULL) {
         CHARPOOL_ALIGNED_FREE(block->data);
@@ -159,7 +153,7 @@ static bool concurrent_charpool_init_options(concurrent_charpool_t *pool, const 
     }
     pool->num_free_lists = num_free_lists;
     for (size_t i = 0; i < num_free_lists; i++) {
-        atomic_init(&pool->free_lists[i], CONCURRENT_CHARPOOL_NULL_FREE_LIST);
+        atomic_init(&pool->free_lists[i], (concurrent_charpool_free_list_t){0, (charpool_free_string_t *)NULL});
     }
     
     concurrent_charpool_block_t *block = concurrent_charpool_block_new(pool->block_size);
@@ -191,7 +185,7 @@ static concurrent_charpool_t *concurrent_charpool_new(void) {
     return pool;
 }
 
-staticconcurrent_charpool_t *concurrent_charpool_new_options(const charpool_options_t options) {
+static concurrent_charpool_t *concurrent_charpool_new_options(const charpool_options_t options) {
     concurrent_charpool_t *pool = CHARPOOL_MALLOC(sizeof(concurrent_charpool_t));
     if (pool == NULL) return NULL;
     if (!concurrent_charpool_init_options(pool, options)) {
@@ -230,9 +224,9 @@ static bool concurrent_charpool_release_size(concurrent_charpool_t *pool, char *
          * another thread didn't already pull the previous head.
         */
         new_head.version = head.version + 1;
-        new_head.item.value = str;
+        new_head.item = (charpool_free_string_t *)str;
         // Store the next pointer in the beginning of the string itself
-        new_head.item.next = head.item.next;
+        new_head.item->next = head.item;
     } while (!atomic_compare_exchange_weak(&pool->free_lists[level], &head, new_head));
     return true;
 }
@@ -261,16 +255,16 @@ static char *concurrent_charpool_alloc(concurrent_charpool_t *pool, size_t size)
         // Compare-and-swap loop on the free-list (double-wide with a version counter)
         do {
             head = atomic_load(&pool->free_lists[j]);
-            if (head.item.value == NULL) {
+            if (head.item == NULL) {
                 break;
             }
             // We increment the version in the more common release case. Only needed on one side
             new_head.version = head.version;
-            new_head.item.next = head.item.next;
+            new_head.item = head.item->next;
         } while (!atomic_compare_exchange_weak(&pool->free_lists[j], &head, new_head));
 
-        if (head.item.value != NULL) {
-            result = head.item.value;
+        if (head.item != NULL) {
+            result = head.item->value;
             return result;
         }
     }
