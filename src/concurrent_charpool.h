@@ -283,7 +283,6 @@ static char *concurrent_charpool_alloc(concurrent_charpool_t *pool, size_t size)
         if (block != last_block) {
             index = atomic_fetch_add(&block->block_index, size);
             in_block = index + size <= pool->block_size;
-            last_block = block;
         }
 
         if (in_block) {
@@ -327,12 +326,8 @@ static char *concurrent_charpool_alloc(concurrent_charpool_t *pool, size_t size)
                 result = new_block->data;
                 spinlock_unlock(&pool->block_change_lock);
                 break;
-            } else if (spin_count < 40) {
-                spin_count++;
-            } else {
-                return NULL;
             }
-
+            last_block = block;
         }
     }
     return result;
