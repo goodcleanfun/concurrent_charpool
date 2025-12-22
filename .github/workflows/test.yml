@@ -86,7 +86,10 @@ jobs:
           mkdir -p deps\charpool
           curl -L https://raw.githubusercontent.com/goodcleanfun/charpool/refs/heads/main/src/charpool.h -o deps\charpool\charpool.h
       - name: Run test with MSVC
-        run: make CC=cl CFLAGS="/std:c11 /volatile:iso /experimental:c11atomics" test
+        run: |
+          cl -S /Fatest.asm /std:c11 /volatile:iso /experimental:c11atomics test.c -I src -I deps
+          echo "--------------------------------"
+          cat test.asm
 
   test-windows-mingw:
     runs-on: windows-latest
@@ -123,4 +126,6 @@ jobs:
           curl -L https://raw.githubusercontent.com/goodcleanfun/charpool/refs/heads/main/src/charpool.h -o deps/charpool/charpool.h
       - name: Build and Test with MinGW
         run: |
-          make CC=gcc CFLAGS="-std=c11" LDFLAGS="-latomic" test
+          gcc -S -o test.asm test.c -g -I src -I deps
+          echo "--------------------------------"
+          cat test.asm
