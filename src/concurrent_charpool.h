@@ -273,7 +273,7 @@ static char *concurrent_charpool_alloc(concurrent_charpool_t *pool, size_t size)
     bool in_block = false;
     concurrent_charpool_block_t *last_block = NULL;
 
-    size_t index;
+    size_t index = 0;
     size_t loops = 0;
     while (!in_block) {
         concurrent_charpool_block_t *block = atomic_load(&pool->block);
