@@ -66,6 +66,8 @@ typedef struct concurrent_charpool_free_list {
     charpool_free_string_t *item;
 } concurrent_charpool_free_list_t;
 
+static concurrent_charpool_free_list_t CONCURRENT_CHARPOOL_NULL_FREE_LIST = {0, (charpool_free_string_t *)NULL};
+
 typedef struct concurrent_charpool {
     uint8_t small_string_min_size;
     uint8_t small_string_max_size;
@@ -153,7 +155,7 @@ static bool concurrent_charpool_init_options(concurrent_charpool_t *pool, const 
     }
     pool->num_free_lists = num_free_lists;
     for (size_t i = 0; i < num_free_lists; i++) {
-        atomic_init(&pool->free_lists[i], (concurrent_charpool_free_list_t){0, (charpool_free_string_t *)NULL});
+        atomic_init(&pool->free_lists[i], CONCURRENT_CHARPOOL_NULL_FREE_LIST);
     }
     
     concurrent_charpool_block_t *block = concurrent_charpool_block_new(pool->block_size);
