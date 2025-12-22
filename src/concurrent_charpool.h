@@ -293,14 +293,6 @@ static char *concurrent_charpool_alloc(concurrent_charpool_t *pool, size_t size)
              * connecting it to the block list.
             */
 
-            /* If this string was too large, rather than decrease the block index,
-             * which may have been updated by another thread, add a string to the
-             * free list for the remainder of the block.
-            */
-            if (index < pool->block_size && pool->block_size - index >= pool->small_string_min_size) {
-                concurrent_charpool_release_size(pool, block->data + index, pool->block_size - index);
-            }
-            
             if (spinlock_trylock(&pool->block_change_lock)) {
                 /* Check if another thread has already added a new block
                  * if this is the case, the current block is already reset and we can proceed
