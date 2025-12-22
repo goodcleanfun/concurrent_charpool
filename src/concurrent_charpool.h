@@ -327,8 +327,9 @@ static char *concurrent_charpool_alloc(concurrent_charpool_t *pool, size_t size)
                 spinlock_unlock(&pool->block_change_lock);
                 break;
             }
-            if (spin_count < 40) {
+            if (spin_count < 100) {
                 spin_count++;
+                cpu_relax();
             } else {
                 return NULL;
             }
