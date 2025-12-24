@@ -127,6 +127,7 @@ static bool concurrent_charpool_init_options(concurrent_charpool_t *pool, const 
     }
 
     pool->small_string_free_list_node_pool = stack_node_pool;
+    spinlock_init(&pool->block_change_lock);
 
     for (uint8_t i = 0; i < (pool->small_string_max_size - pool->small_string_min_size); i++) {
         if (!concurrent_small_string_stack_init_pool(&pool->small_string_free_lists[i], stack_node_pool)) {
