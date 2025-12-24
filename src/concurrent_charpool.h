@@ -330,7 +330,7 @@ static char *concurrent_charpool_alloc(concurrent_charpool_t *pool, size_t size)
             }
             if (spin_count < 1000) {
                 spin_count++;
-                cpu_relax();
+                thrd_yield();
             } else {
                 return NULL;
             }
