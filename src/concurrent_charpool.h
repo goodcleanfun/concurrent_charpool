@@ -327,8 +327,7 @@ static char *concurrent_charpool_alloc(concurrent_charpool_t *pool, size_t size)
                 result = new_block->data;
                 spinlock_unlock(&pool->block_change_lock);
                 break;
-            }
-            if (spin_count < 1000) {
+            } else if (spin_count < 1000) {
                 spin_count++;
                 thrd_yield();
             } else {
