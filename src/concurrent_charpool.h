@@ -275,9 +275,7 @@ static char *concurrent_charpool_alloc(concurrent_charpool_t *pool, size_t size)
     concurrent_charpool_block_t *last_block = NULL;
 
     size_t index = 0;
-    size_t loops = 0;
-
-    size_t spin_count = 0;
+    size_t spins = 0;
     while (!in_block) {
         concurrent_charpool_block_t *block = atomic_load(&pool->block);
         // This gets the current thread a unique index in the current block
@@ -328,11 +326,11 @@ static char *concurrent_charpool_alloc(concurrent_charpool_t *pool, size_t size)
                 result = new_block->data;
                 spinlock_unlock(&pool->block_change_lock);
                 break;
-            } else if (spin_count < 1000) {
-                spin_count++;
-                thrd_yield();
+            } else if (spins < SPINLOCK_MAX_PAUSE_ITERATIONS) {
+                spins++;
+                cpu_relax();
             } else {
-                return NULL;
+                thrd_yield();
             }
             last_block = block;
         }
