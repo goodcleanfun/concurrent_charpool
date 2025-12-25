@@ -1,6 +1,6 @@
 {
     "name": "concurrent_charpool",
-    "version": "0.0.0",
+    "version": "0.1.0",
     "repo": "goodcleanfun/concurrent_charpool",
     "description": "Concurrent cache-friendly memory pool for strings, using adaptive free-lists: stacks when strings are smaller than a pointer and in-block for strings that are pointer-size or larger.",
     "keywords": ["string", "char", "arena", "bump", "allocator", "amortized", "cache-friendly", "concurrent"],
